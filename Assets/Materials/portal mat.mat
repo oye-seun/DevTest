@@ -139,7 +139,7 @@ Material:
     - _TRANSPARENCY: 0
     - _WorkflowMode: 1
     - _ZWrite: 1
-    - _visible: 0
+    - _visible: 0.95585775
     m_Colors:
     - Color_AC099F9F: {r: 0, g: 0.95835733, b: 1, a: 0}
     - _BASE_COLOR: {r: 1, g: 1, b: 1, a: 1}
