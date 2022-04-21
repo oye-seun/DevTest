@@ -151,6 +151,9 @@ public class Crate : objectclass, IObject
     public void pullcrate()
     {
         GameManager.UIDesetter();
+
+        //disable collision between crate and player, experimental to remove pushback error while pulling
+        Physics.IgnoreCollision(GetComponent<Collider>(), player.GetComponent<Collider>(), true); 
         if (!PullPos && !RayManager.pulling)
         {
             StartCoroutine(player.GetComponent<ThirdPersonCharacter>().GoDir(PullPosition, ()=> {
@@ -294,6 +297,8 @@ public class Crate : objectclass, IObject
         {
             SlidingSound.Stop();
         }
+
+        Physics.IgnoreCollision(GetComponent<Collider>(), player.GetComponent<Collider>(), false); //enable collision between crate and player
     }
 
     // pause the sound playing
