@@ -91,7 +91,7 @@ public class AgentLinkMover : MonoBehaviour
             {
                 //Debug.Log("jumping");
                 transform.rotation = Quaternion.Lerp(transform.rotation, dir, 10 * Time.deltaTime);
-                ThirdPersonCharacter.onFloatable = false;
+                ThirdPersonCharacterModified.onFloatable = false;
                 
                 anim.applyRootMotion = false;
                 anim.SetBool("runjump", true);
@@ -102,7 +102,7 @@ public class AgentLinkMover : MonoBehaviour
             normalizedTime += Time.deltaTime / duration;
             yield return null;
         }
-        ThirdPersonCharacter.onFloatable = false;
+        ThirdPersonCharacterModified.onFloatable = false;
         anim.SetBool("runjump", false);
     }
 }

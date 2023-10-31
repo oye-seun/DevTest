@@ -12,12 +12,21 @@ namespace UnityStandardAssets.Characters.ThirdPerson
 		[SerializeField] float m_JumpPower = 12f;
 		[Range(1f, 4f)][SerializeField] float m_GravityMultiplier = 2f;
 		[SerializeField] float m_RunCycleLegOffset = 0.2f; //specific to the character in sample assets, will need to be modified to work with others
-		[SerializeField] float m_MoveSpeedMultiplier = 1f;
+		[SerializeField] public float m_MoveSpeedMultiplier = 1f;
 		[SerializeField] float m_AnimSpeedMultiplier = 1f;
 		[SerializeField] float m_GroundCheckDistance = 0.1f;
+		[SerializeField] Animator m_Animator;
+		[SerializeField] LayerMask m_StepLayer;
+		[SerializeField] float m_StepCheckHeight;
+		[SerializeField] float m_StepCheckDist;
+		[SerializeField] float m_MaxClimbingSpeed;
+		[SerializeField] float m_MinStepHeight;
+		[SerializeField] float m_MaxStepHeight;
+		[SerializeField] float m_StepForce;
 
+		//PosNDir leftLegPlacement;
+		//PosNDir rightLegPlacement;
 		Rigidbody m_Rigidbody;
-		Animator m_Animator;
 		bool m_IsGrounded;
 		float m_OrigGroundCheckDistance;
 		const float k_Half = 0.5f;
@@ -32,7 +41,7 @@ namespace UnityStandardAssets.Characters.ThirdPerson
 
 		void Start()
 		{
-			m_Animator = GetComponent<Animator>();
+			//m_Animator = GetComponent<Animator>();
 			m_Rigidbody = GetComponent<Rigidbody>();
 			m_Capsule = GetComponent<CapsuleCollider>();
 			m_CapsuleHeight = m_Capsule.height;
@@ -40,7 +49,7 @@ namespace UnityStandardAssets.Characters.ThirdPerson
 
 			m_Rigidbody.constraints = RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationY | RigidbodyConstraints.FreezeRotationZ;
 			m_OrigGroundCheckDistance = m_GroundCheckDistance;
-		}
+        }
 
 
 		public void Move(Vector3 move, bool crouch, bool jump)
@@ -73,6 +82,7 @@ namespace UnityStandardAssets.Characters.ThirdPerson
 
 			// send input and other state parameters to the animator
 			UpdateAnimator(move);
+			StepUp();
 		}
 
 
@@ -184,13 +194,28 @@ namespace UnityStandardAssets.Characters.ThirdPerson
 		}
 
 
-		public void OnAnimatorMove()
+		//public void OnAnimatorMove()
+		//{
+		//	// we implement this function to override the default root motion.
+		//	// this allows us to modify the positional speed before it's applied.
+		//	if (m_IsGrounded && Time.deltaTime > 0)
+		//	{
+		//		Vector3 v = (m_Animator.deltaPosition * m_MoveSpeedMultiplier) / Time.deltaTime;
+
+		//		// we preserve the existing y part of the current velocity.
+		//		v.y = m_Rigidbody.velocity.y;
+		//		m_Rigidbody.velocity = v;
+		//	}
+		//}
+
+		public void Move(Vector3 force)
 		{
-			// we implement this function to override the default root motion.
-			// this allows us to modify the positional speed before it's applied.
-			if (m_IsGrounded && Time.deltaTime > 0)
+            //force.y = m_Rigidbody.velocity.y;
+            //m_Rigidbody.velocity = force;
+
+            if (m_IsGrounded && Time.deltaTime > 0)
 			{
-				Vector3 v = (m_Animator.deltaPosition * m_MoveSpeedMultiplier) / Time.deltaTime;
+				Vector3 v = (force * m_MoveSpeedMultiplier) / Time.deltaTime;
 
 				// we preserve the existing y part of the current velocity.
 				v.y = m_Rigidbody.velocity.y;
@@ -199,16 +224,16 @@ namespace UnityStandardAssets.Characters.ThirdPerson
 		}
 
 
-		void CheckGroundStatus()
+        void CheckGroundStatus()
 		{
 			RaycastHit hitInfo;
 #if UNITY_EDITOR
 			// helper to visualise the ground check ray in the scene view
-			Debug.DrawLine(transform.position + (Vector3.up * 0.1f), transform.position + (Vector3.up * 0.1f) + (Vector3.down * m_GroundCheckDistance));
+			Debug.DrawLine(transform.position + (Vector3.up * 0.4f), transform.position + (Vector3.up * 0.4f) + (Vector3.down * m_GroundCheckDistance));
 #endif
 			// 0.1f is a small offset to start the ray from inside the character
 			// it is also good to note that the transform position in the sample assets is at the base of the character
-			if (Physics.Raycast(transform.position + (Vector3.up * 0.1f), Vector3.down, out hitInfo, m_GroundCheckDistance))
+			if (Physics.Raycast(transform.position + (Vector3.up * 0.4f), Vector3.down, out hitInfo, m_GroundCheckDistance))
 			{
 				m_GroundNormal = hitInfo.normal;
 				m_IsGrounded = true;
@@ -216,10 +241,35 @@ namespace UnityStandardAssets.Characters.ThirdPerson
 			}
 			else
 			{
-				m_IsGrounded = false;
+                m_IsGrounded = false;
 				m_GroundNormal = Vector3.up;
 				m_Animator.applyRootMotion = false;
 			}
 		}
-	}
+
+		private void StepUp()
+		{
+			Ray ray1  = new Ray(transform.position + (Vector3.up * m_StepCheckHeight) , transform.forward);
+			RaycastHit hit1;
+			Debug.DrawLine(ray1.origin, ray1.origin + (ray1.direction * m_StepCheckDist), Color.cyan);
+			if(Physics.Raycast(ray1, out hit1, m_StepCheckDist, m_StepLayer))
+			{
+				Vector3 ray2origin = new Vector3(hit1.point.x, transform.position.y + m_Capsule.height, hit1.point.z) + (transform.forward * 0.1f);
+				Ray ray2 = new Ray(ray2origin, Vector3.down);
+				RaycastHit hit2;
+				Debug.DrawLine(ray2.origin, ray2.origin + (ray2.direction * 100), Color.cyan);
+				if(Physics.Raycast(ray2, out hit2, 100, m_StepLayer))
+				{
+                    Debug.Log("step: " + (hit2.point.y - hit1.point.y).ToString());
+                    if (hit2.point.y > hit1.point.y + m_MinStepHeight && hit2.point.y < hit1.point.y + m_MaxStepHeight)
+					{
+						//Vector3 target = new Vector3(transform.position.x, hit2.point.y, transform.position.z);
+						//Debug.Log("vel: " + m_Rigidbody.velocity.magnitude);
+						//transform.position = Vector3.Lerp(transform.position, target, Vector3.Magnitude(new Vector3(m_Rigidbody.velocity.x, 0, m_Rigidbody.velocity.z)) / m_MaxClimbingSpeed);
+						m_Rigidbody.AddForce(Vector3.up * /*(Mathf.Lerp(m_MinStepHeight, m_MaxStepHeight, hit2.point.y - hit1.point.y)/m_MaxStepHeight) **/ m_StepForce, ForceMode.VelocityChange);
+					}
+				}
+			}
+		}
+    }
 }
