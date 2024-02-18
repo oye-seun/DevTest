@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.UIElements;
 
 [RequireComponent(typeof(Rigidbody))]
 [RequireComponent(typeof(CapsuleCollider))]
@@ -20,6 +21,8 @@ public class ThirdPersonCharacter : MonoBehaviour
     [Tooltip("This Distance allowance for calculating negative force to avoid character bouncing")]
     [SerializeField] float m_floatExtraThickness = 1;
 
+    public bool TransmitMotion = true;
+
     //PosNDir leftLegPlacement;
     //PosNDir rightLegPlacement;
     Rigidbody m_Rigidbody;
@@ -34,6 +37,12 @@ public class ThirdPersonCharacter : MonoBehaviour
     CapsuleCollider m_Capsule;
     bool m_Crouching;
 
+    int _moveCalled;
+
+    //private Vector3 position;
+    //private Quaternion rotation;
+
+    public float StationaryTurnSpeed => m_StationaryTurnSpeed;
 
     void Start()
     {
@@ -45,12 +54,32 @@ public class ThirdPersonCharacter : MonoBehaviour
 
         m_Rigidbody.constraints = RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationY | RigidbodyConstraints.FreezeRotationZ;
         m_OrigGroundCheckDistance = m_GroundCheckDistance;
+
+        //position = transform.position;
+        //rotation = transform.rotation;
+    }
+
+    private void Update()
+    {
+        if (_moveCalled > 0)
+        {
+            _moveCalled--;
+            //Debug.Log("vooing");
+        }
+        else
+        {
+            m_ForwardAmount = 0;
+            m_TurnAmount = 0;
+            UpdateAnimator(Vector3.zero);
+            //Debug.Log("not oving");
+        }
+        //Debug.Log("v " + m_Rigidbody.velocity);
     }
 
 
-    public void Move(Vector3 move, bool crouch, bool jump)
+    public void Move(Vector3 move, bool crouch, bool jump, bool back = false)
     {
-
+        _moveCalled ++;
         // convert the world relative moveInput vector into a local-relative
         // turn amount and forward amount required to head in the desired
         // direction.
@@ -58,8 +87,17 @@ public class ThirdPersonCharacter : MonoBehaviour
         move = transform.InverseTransformDirection(move);
         CheckGroundStatus();
         move = Vector3.ProjectOnPlane(move, m_GroundNormal);
-        m_TurnAmount = Mathf.Atan2(move.x, move.z);
-        m_ForwardAmount = move.z;
+        
+        if (!back)
+        {
+            m_ForwardAmount = Mathf.Clamp01(move.z);
+            m_TurnAmount = Mathf.Clamp(Mathf.Atan2(move.x, move.z), -1, 1);
+        }
+        else
+        {
+            m_ForwardAmount = Mathf.Clamp(move.z, -1, 0);
+            m_TurnAmount = (move.x != 0 && move.z != 0)? Mathf.Clamp(Mathf.Atan2(-move.x, -move.z), -1, 1) : 0;
+        }
 
         ApplyExtraTurnRotation();
 
@@ -81,6 +119,23 @@ public class ThirdPersonCharacter : MonoBehaviour
         //StepUp();
     }
 
+
+    public void Turn(Vector3 move, float speedFactor)
+    {
+        if (move.magnitude > 1f) move.Normalize();
+        move = transform.InverseTransformDirection(move);
+        CheckGroundStatus();
+        move = Vector3.ProjectOnPlane(move, m_GroundNormal);
+
+        m_TurnAmount = Mathf.Clamp(Mathf.Atan2(move.x, move.z), -1, 1);
+        m_ForwardAmount = 0;
+        m_Animator.SetFloat("Turn", m_TurnAmount, 0.1f, Time.deltaTime);
+
+        float turnSpeed = m_StationaryTurnSpeed * speedFactor;
+        transform.Rotate(0, m_TurnAmount * turnSpeed * Time.deltaTime, 0);
+    }
+
+    
 
     //void ScaleCapsuleForCrouching(bool crouch)
     //{
@@ -202,18 +257,30 @@ public class ThirdPersonCharacter : MonoBehaviour
     //	}
     //}
 
-    public void Move(Vector3 force)
+
+    public void Move(Vector3 deltaPos)
     {
-        //force.y = m_Rigidbody.velocity.y;
-        //m_Rigidbody.velocity = force;
+        //Debug.Log("deltaPos: " + deltaPos);
+        if (!TransmitMotion)
+        {
+            //Debug.Log("false transit otion");
+            m_Animator.ApplyBuiltinRootMotion();
+            m_Rigidbody.velocity = Vector3.Lerp(m_Rigidbody.velocity, Vector3.zero, Time.deltaTime * 7.5f);
+            return;
+        }
 
         if (m_IsGrounded && Time.deltaTime > 0)
         {
-            Vector3 v = (force * m_MoveSpeedMultiplier) / Time.deltaTime;
+            //Debug.Log("true transit otion");
+            Vector3 v = (deltaPos * m_MoveSpeedMultiplier) / Time.deltaTime;
 
             // we preserve the existing y part of the current velocity.
             v.y = m_Rigidbody.velocity.y;
             m_Rigidbody.velocity = v;
+            //Debug.Log("Rigidbody.velocity: " + m_Rigidbody.velocity);
+
+            //position = transform.position;
+            //rotation = transform.rotation;
         }
     }
 

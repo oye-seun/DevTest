@@ -6,8 +6,13 @@ using UnityEngine.AI;
 using UnityStandardAssets.Characters.ThirdPerson;
 using DG.Tweening;
 using UnityEngine.SceneManagement;
+using System;
+
+public enum GameState { Playing, Interacting, GameOver/*, Cutscene*/}
 public class GameManager : MonoSingleton<GameManager>
 {
+    public GameState GameState { get; private set; }
+    public CamState CamState;
 
     //..................Position Event variables....................................................................................
 
@@ -28,9 +33,15 @@ public class GameManager : MonoSingleton<GameManager>
     //..............................................................................................................................
 
 
+    //...........Events.............................................................................................................
+    public static event Action<GameState, GameState> GameStateChanged;
+    //public static event Action CutsceneStarted;
+    //private GameState _currentState, _nextState;
+    //..............................................................................................................................
+
 
     //................UI name setter variables......................................................................................
-    public static Camera cam;
+    public Camera cam;
     [SerializeField] private GameObject _buttonPromptCanvas;      //prefab for displaying name canvas
     private BottonPrompt _buttonPrompt;
     //..............................................................................................................................
@@ -410,6 +421,36 @@ public class GameManager : MonoSingleton<GameManager>
     {
         _buttonPrompt.gameObject.SetActive(false);
     }
+
+    private void ChangeGameState(GameState state)
+    {
+        if( state != GameState)
+        {
+            GameStateChanged?.Invoke(GameState, state);
+            GameState = state;
+        }
+    }
+
+    public void StartInteractSession()
+    {
+        DisableInteractPrompt();
+        ChangeGameState(GameState.Interacting);
+        //GameState = GameState.Interacting;
+        //ToggleInteractSession?.Invoke(true);  
+    }
+
+    public void EndInteractSession()
+    {
+        ChangeGameState(GameState.Playing);
+        //GameState = GameState.Playing;
+        //ToggleInteractSession?.Invoke(false);
+    }
+
+    //public void StartCutscene()
+    //{
+    //    GameState = GameState.Cutscene;
+    //    CutsceneStarted?.Invoke();
+    //}
 
     //public static void SetCoins(int coin)
     //{

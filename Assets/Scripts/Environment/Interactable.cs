@@ -9,9 +9,10 @@ public abstract class Interactable : MonoBehaviour
 {
     public static Action<Interactable> InteractableCreated;
     public static Action<Interactable> InteractableDestroyed;
+    public bool ShowPromptHandle;
     public Vector3 PromptPos;
 
-    private void Start()
+    protected virtual void Start()
     {
         InteractableCreated.Invoke(this);
     }
@@ -28,14 +29,18 @@ public abstract class Interactable : MonoBehaviour
 public class InteractableEditor : Editor
 {
     private Interactable _interactable;
-    private void OnEnable()
+    protected virtual void OnEnable()
     {
         _interactable = (Interactable)target;
     }
 
     protected virtual void OnSceneGUI()
     {
-        _interactable.PromptPos = Handles.PositionHandle(_interactable.PromptPos, Quaternion.identity);
-        Handles.DrawWireCube(_interactable.PromptPos, Vector3.one * 0.5f);
+        if (_interactable.ShowPromptHandle)
+        {
+            _interactable.PromptPos = Handles.PositionHandle(_interactable.PromptPos, Quaternion.identity);
+            Handles.DrawWireCube(_interactable.PromptPos, Vector3.one * 0.5f);
+        }
+        
     }
 }

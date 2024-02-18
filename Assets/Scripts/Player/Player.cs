@@ -38,7 +38,7 @@ public class Player : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        CheckNearest();
+        if(GameManager.instance.GameState == GameState.Playing) CheckNearest();
     }
 
     private void CheckNearest()
@@ -52,7 +52,11 @@ public class Player : MonoBehaviour
         }
 
         if (nearest < 0) return;
-        if (nearDist < _interactDist) GameManager.instance.ShowInteractButtonPrompt(_interactables[nearest].PromptPos, _interactables[nearest].transform.position);
+        if (nearDist < _interactDist)
+        {
+            GameManager.instance.ShowInteractButtonPrompt(_interactables[nearest].PromptPos, _interactables[nearest].transform.position);
+            if (PlayerInputs.instance.InteractKeyPressed()) _interactables[nearest].Interact();
+        }
         else GameManager.instance.DisableInteractPrompt();
         //_interactables[nearest]
     }

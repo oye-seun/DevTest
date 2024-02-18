@@ -29,7 +29,7 @@ public class Pointer : MonoBehaviour
         pos.y += FloorOffset;
         transform.position = pos;
         //ring.transform.rotation = Quaternion.FromToRotation(ring.transform.up, normal);  //bend ring according to plane normal does not work very well
-        pointer.transform.eulerAngles = new Vector3(pointer.transform.eulerAngles.x, Quaternion.LookRotation(-GameManager.cam.transform.forward).eulerAngles.y, pointer.transform.eulerAngles.z);
+        pointer.transform.eulerAngles = new Vector3(pointer.transform.eulerAngles.x, Quaternion.LookRotation(-GameManager.instance.cam.transform.forward).eulerAngles.y, pointer.transform.eulerAngles.z);
     }
 
     public void Hide()

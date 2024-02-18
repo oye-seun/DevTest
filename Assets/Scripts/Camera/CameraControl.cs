@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using DG.Tweening;
+using System;
 
 public class CameraControl : MonoBehaviour
 {
@@ -14,15 +15,15 @@ public class CameraControl : MonoBehaviour
         camtrans = transform;
     }
 
-    //public static void MoveCam(CamState state, float time, Generalevent.PressButton onfinished)
-    //{
-    //    cam.DOFieldOfView(state.FOV, time);
-    //    camtrans.DOMove(state.pos, time);
-    //    camtrans.DOLocalRotate(state.rot, time).OnComplete(() => { onfinished(); });
-    //}
+    public static void MoveCam(CamState state, float time, Action onfinished)
+    {
+        cam.DOFieldOfView(state.FOV, time);
+        camtrans.DOMove(state.pos, time);
+        camtrans.DOLocalRotate(state.rot, time).OnComplete(() => { onfinished(); });
+    }
 }
 
-[SerializeField]
+[System.Serializable]
 public class CamState
 {
     public float FOV;
@@ -34,5 +35,12 @@ public class CamState
         FOV = fov;
         pos = Pos;
         rot = Rot;
+    }
+
+    public CamState()
+    {
+        FOV = 60;
+        pos = Vector3.zero;
+        rot = Vector3.zero;
     }
 }
