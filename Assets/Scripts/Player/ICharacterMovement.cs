@@ -285,7 +285,7 @@ public class WalkTurn
         //Debug.Log("sqr mag" + disp.sqrMagnitude);
         if (Vector3.SqrMagnitude(disp) > _exitDistance)
 		{
-            _character.Move(disp.normalized * moveMultiplier, false, false);
+            _character.Move(disp.normalized * moveMultiplier/*, false, false*/);
 		}
         else
         {

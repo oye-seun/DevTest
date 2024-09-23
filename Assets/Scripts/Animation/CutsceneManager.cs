@@ -8,6 +8,7 @@ using UnityEngine.Timeline;
 public class CutsceneManager : MonoSingleton<CutsceneManager>
 {
     public static event Action CutsceneEnded;
+    public static event Action CutsceneStarted;
 
     [SerializeField] private PlayableDirector _playableDirector;
     [SerializeField] private List <TimelineAsset> _clips;
@@ -38,6 +39,7 @@ public class CutsceneManager : MonoSingleton<CutsceneManager>
 
     public void PlayClip(int num, Action onComplete)
     {
+        CutsceneStarted?.Invoke();
         _onComplete = onComplete;
         _playableDirector.playableAsset = _clips[num];
         _playableDirector.Play();

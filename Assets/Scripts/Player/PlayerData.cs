@@ -5,8 +5,8 @@ using UnityEngine.Animations.Rigging;
 
 public class PlayerData : MonoBehaviour
 {
-    public static int coins = 0;
-    public static List<InventoryObject> inventory = new List<InventoryObject>();
+    public int coins { get; private set; } = 0;
+    public Dictionary<string, InventoryObject> inventory { get; private set; } = new Dictionary<string, InventoryObject>();
     [SerializeField] private Transform _leftHandTarget;
     [SerializeField] private Transform _rightHandTarget;
     [SerializeField] private TwoBoneIKConstraint _leftHandConstraint;

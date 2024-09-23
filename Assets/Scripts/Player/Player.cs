@@ -1,11 +1,31 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Player : MonoBehaviour
+public class Player : MonoSingleton<Player>
 {
+    public static event Action<PlayerStates> OnPlayerStateChanged;
+    // public references
+    public PlayerController playerController { get; private set; }
+    public CharacterAnimControl characterAnimControl { get; private set; }
+    public PlayerData playerData { get; private set; }
+    public PlayerPositioner playerPositioner { get; private set; }
+    public SimplePlayerPositioner simplePlayerPositioner { get; private set; }
+    public PlayerStates State { get; private set; }
+
     [SerializeField] private float _interactDist;
 
     private List<Interactable> _interactables;
+
+
+    private void Awake()
+    {
+        playerController = GetComponent<PlayerController>();
+        characterAnimControl = GetComponentInChildren<CharacterAnimControl>();
+        playerData = GetComponent<PlayerData>();
+        playerPositioner = GetComponent<PlayerPositioner>();
+        simplePlayerPositioner = GetComponent<SimplePlayerPositioner>();
+    }
 
     private void OnEnable()
     {
@@ -38,7 +58,13 @@ public class Player : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if(GameManager.instance.GameState == GameState.Playing) CheckNearest();
+        //if(GameManager.instance.GameState == GameState.Playing) CheckNearest();
+        switch (State)
+        {
+            case PlayerStates.PlayerControlled:
+                CheckNearest();
+                break;
+        }
     }
 
     private void CheckNearest()
@@ -60,4 +86,15 @@ public class Player : MonoBehaviour
         else GameManager.instance.DisableInteractPrompt();
         //_interactables[nearest]
     }
+
+    public void ChangeState(PlayerStates state)
+    {
+        if(state != State)
+        {
+            OnPlayerStateChanged?.Invoke(state);
+            State = state;
+        }
+    }
 }
+
+public enum PlayerStates { PlayerControlled, GameControlled, Interacting }

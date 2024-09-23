@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-[CreateAssetMenu(fileName = "New keypiece", menuName = "inventoryobject/keypiece")]
+[CreateAssetMenu(fileName = "NewKeyPiece", menuName = "Inventory Object/keypiece")]
 public class KeyPiece : InventoryObject
 {
     public new string name = "broken key piece";
@@ -17,7 +17,7 @@ public class KeyPiece : InventoryObject
     public override void OnCollect()
     {
         //Debug.Log("collected key");
-        PlayerData.inventory.Add(this);
+        Player.instance.playerData.inventory.Add(name, this);
     }
 
     public override void OnUse()

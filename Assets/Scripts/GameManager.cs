@@ -8,7 +8,7 @@ using DG.Tweening;
 using UnityEngine.SceneManagement;
 using System;
 
-public enum GameState { Playing, Interacting, GameOver/*, Cutscene*/}
+public enum GameState { Playing, GameOver/*, Cutscene*/}
 public class GameManager : MonoSingleton<GameManager>
 {
     public GameState GameState { get; private set; }
@@ -34,7 +34,7 @@ public class GameManager : MonoSingleton<GameManager>
 
 
     //...........Events.............................................................................................................
-    public static event Action<GameState, GameState> GameStateChanged;
+    public static event Action<GameState> GameStateChanged;
     //public static event Action CutsceneStarted;
     //private GameState _currentState, _nextState;
     //..............................................................................................................................
@@ -166,6 +166,16 @@ public class GameManager : MonoSingleton<GameManager>
     void Update()
     {
         //Poscheck();
+    }
+
+    private void OnEnable()
+    {
+        Player.OnPlayerStateChanged += OnPlayerStateChanged;
+    }
+
+    private void OnDisable()
+    {
+        Player.OnPlayerStateChanged -= OnPlayerStateChanged;
     }
 
     private void OnApplicationFocus(bool focus)
@@ -426,24 +436,39 @@ public class GameManager : MonoSingleton<GameManager>
     {
         if( state != GameState)
         {
-            GameStateChanged?.Invoke(GameState, state);
+            GameStateChanged?.Invoke(state);
             GameState = state;
         }
     }
 
-    public void StartInteractSession()
-    {
-        DisableInteractPrompt();
-        ChangeGameState(GameState.Interacting);
-        //GameState = GameState.Interacting;
-        //ToggleInteractSession?.Invoke(true);  
-    }
+    //public void StartInteractSession()
+    //{
+    //    DisableInteractPrompt();
+    //    //ChangeGameState(GameState.Interacting);
+    //    //GameState = GameState.Interacting;
+    //    //ToggleInteractSession?.Invoke(true);  
+    //}
 
-    public void EndInteractSession()
+    //public void EndInteractSession()
+    //{
+    //    ChangeGameState(GameState.Playing);
+    //    //GameState = GameState.Playing;
+    //    //ToggleInteractSession?.Invoke(false);
+    //}
+
+    private void OnPlayerStateChanged(PlayerStates state)
     {
-        ChangeGameState(GameState.Playing);
-        //GameState = GameState.Playing;
-        //ToggleInteractSession?.Invoke(false);
+        switch(state)
+        {
+            case PlayerStates.PlayerControlled:
+                break;
+            case PlayerStates.GameControlled:
+                DisableInteractPrompt();
+                break;
+            case PlayerStates.Interacting:
+                DisableInteractPrompt();
+                break;
+        }
     }
 
     //public void StartCutscene()

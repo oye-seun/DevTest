@@ -1,10 +1,14 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityStandardAssets.Characters.ThirdPerson;
 
-public class CharacterAnimControl : MonoSingleton<CharacterAnimControl>
+public class CharacterAnimControl : MonoBehaviour
 {
+    public static event Action<Vector3, Quaternion> AnimatorMove;
+    public Animator m_Animator {  get; private set; }
+
     [SerializeField] LayerMask m_IkFootMask;
     [SerializeField] float m_ShoeDist;
     [SerializeField] float m_HipBoneToLeg;
@@ -21,8 +25,7 @@ public class CharacterAnimControl : MonoSingleton<CharacterAnimControl>
 
     public Transform RightHand { get { return m_Animator.GetBoneTransform(HumanBodyBones.RightHand); } }
 
-    Animator m_Animator;
-    ThirdPersonCharacter TPC;
+    //ThirdPersonCharacter TPC;
 
     private void OnEnable()
     {
@@ -38,7 +41,7 @@ public class CharacterAnimControl : MonoSingleton<CharacterAnimControl>
     void Start()
     {
         m_Animator = GetComponent<Animator>();
-        TPC = transform.parent.GetComponent<ThirdPersonCharacter>();
+        //TPC = transform.parent.GetComponent<ThirdPersonCharacter>();
 
         m_LShoeCollider.parent = m_Animator.GetBoneTransform(HumanBodyBones.LeftFoot);
         m_LShoeCollider.position = m_Animator.GetBoneTransform(HumanBodyBones.LeftFoot).position + (Vector3.down * m_ShoeDist);
@@ -87,7 +90,8 @@ public class CharacterAnimControl : MonoSingleton<CharacterAnimControl>
 
     public void OnAnimatorMove()
     {
-        TPC.Move(m_Animator.deltaPosition);
+        //TPC.Move(m_Animator.deltaPosition);
+        AnimatorMove?.Invoke(m_Animator.deltaPosition, m_Animator.deltaRotation);
     }
 
     private void OnAnimatorIK(int layerIndex)
@@ -106,8 +110,10 @@ public class CharacterAnimControl : MonoSingleton<CharacterAnimControl>
             //capsStartHeight -= transform.position.y;
             //capsStartHeight /= transform.localScale.y;
 
-            capsStartHeight -= TPC.transform.position.y;
-            capsStartHeight /= TPC.transform.localScale.y;
+            //capsStartHeight -= TPC.transform.position.y;
+            //capsStartHeight /= TPC.transform.localScale.y;
+            capsStartHeight -= transform.parent.position.y;
+            capsStartHeight /= transform.parent.localScale.y;
 
 
             //Debug.Log("capsStartHeight: " + capsStartHeight);

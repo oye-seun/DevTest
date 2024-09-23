@@ -5,6 +5,18 @@ using UnityEngine;
 
 public class PlayerPositioner : MonoBehaviour
 {
+    [System.Serializable]
+    public struct Waypoint
+    {
+        public Vector3 Position;
+        public Vector3 Forward;
+        public float FwdStrength;
+    }
+
+    public static event Action<Vector3, bool> Move;
+    public static event Action<Vector3, float> Turn;
+
+
     [SerializeField] private float _maxFollowDist = 1f;
     [SerializeField] private float _updateSpeed = 0.5f;
     [SerializeField] private float _zeroTimeAfterComplete = 0.2f;
@@ -13,7 +25,7 @@ public class PlayerPositioner : MonoBehaviour
     private Spline _spline;
     private float _moveProgress;
     private Action _onComplete;
-    private ThirdPersonCharacter _character;
+    //private ThirdPersonCharacter _character;
     private bool _useBack;
 
     //private Vector3 _dir;
@@ -23,7 +35,7 @@ public class PlayerPositioner : MonoBehaviour
     void Start()
     {
         _spline = new Spline();
-        _character = GetComponent<ThirdPersonCharacter>();
+        //_character = GetComponent<ThirdPersonCharacter>();
         _moveProgress = 1.1f + _zeroTimeAfterComplete;
     }
 
@@ -63,13 +75,13 @@ public class PlayerPositioner : MonoBehaviour
             Vector3 distToEnd = transform.position - endPos;
             if (_moveProgress < 1.1f)
             {
-                if(!_useBack) _character.Move(dir.normalized * PlayerController.instance.MoveValMultiplier * Mathf.Clamp(Mathf.InverseLerp(0, _slowMovementStartDist, distToEnd.magnitude), 0.1f, 1), false, false);
-                else _character.Move(dir.normalized * PlayerController.instance.MoveValMultiplier * Mathf.Clamp(Mathf.InverseLerp(0, _slowMovementStartDist, distToEnd.magnitude), 0.1f, 1), false, false, true);
+                if(!_useBack) /*_character.Move*/Move?.Invoke(dir.normalized * Player.instance.playerController.MoveValMultiplier * Mathf.Clamp(Mathf.InverseLerp(0, _slowMovementStartDist, distToEnd.magnitude), 0.1f, 1), /*false,*/ false);
+                else /*_character.Move*/Move?.Invoke(dir.normalized * Player.instance.playerController.MoveValMultiplier * Mathf.Clamp(Mathf.InverseLerp(0, _slowMovementStartDist, distToEnd.magnitude), 0.1f, 1), /*false, false,*/ true);
             }
             else
             {
-                if(!_useBack) _character.Move(Vector3.zero, false, false);
-                else _character.Move(Vector3.zero, false, false, true);
+                if(!_useBack)/* _character.Move*/Move?.Invoke(Vector3.zero, /*false,*/ false);
+                else /*_character.Move*/Move?.Invoke(Vector3.zero, /*false, false,*/ true);
             }
 
             _moveProgress += Time.deltaTime * _updateSpeed * Mathf.InverseLerp(_maxFollowDist, 0, dir.magnitude);
@@ -96,7 +108,7 @@ public class PlayerPositioner : MonoBehaviour
         _turning = true;
         while(Vector3.Dot(transform.forward, dir) < 0.95f)
         {
-            _character.Turn(dir, speedFactor);
+            /*_character.Turn*/Turn?.Invoke(dir, speedFactor);
             yield return null;
         }
 

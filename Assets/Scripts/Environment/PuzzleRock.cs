@@ -17,7 +17,8 @@ public class PuzzleRock : Interactable
     {
         if (!_solved)
         {
-            GameManager.instance.StartInteractSession();
+            //GameManager.instance.StartInteractSession();
+            Player.instance.ChangeState(PlayerStates.Interacting);
             UIPrompt.instance.ShowBackPrompt(true);
             CameraControl.MoveCam(CamState, 0.6f, () => { _inFocus = true; });
         }
@@ -27,7 +28,8 @@ public class PuzzleRock : Interactable
     {
         _inFocus = false;
         UIPrompt.instance.ShowPrompt(false);
-        GameManager.instance.EndInteractSession();
+        //GameManager.instance.EndInteractSession();
+        Player.instance.ChangeState(PlayerStates.PlayerControlled);
         CameraControl.MoveCam(GameManager.instance.CamState, 0.6f, () => {});
     }
 
