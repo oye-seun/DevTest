@@ -1,12 +1,15 @@
 ﻿using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.VFX;
 
 public class PuzzleRock1 : Interactable
 {
     public CamState CamState = new CamState();
     [SerializeField] private List<PuzzleRockSlider> _sliders;
     [SerializeField] private Vector3 _fruitPos;
+    [SerializeField] private GameObject _fruitPlacedEffect;
+    [SerializeField] private VisualEffectAsset _effectAsset;
 
     [Header("Interaction Point")]
     [SerializeField] private PlayerPositioner.Waypoint _interactPoint;
@@ -24,8 +27,10 @@ public class PuzzleRock1 : Interactable
 
     public override void Interact()
     {
-        if (!_solved /*&& Player.instance.playerData.inventory.ContainsKey("Energy Fruit")*/)
+        if (!_solved && Player.instance.playerData.inventory.ContainsKey("Energy Fruit"))
         {
+            Player.instance.ChangeState(PlayerStates.GameControlled);
+
             Vector3 startDir = _interactPoint.Position - Player.instance./*playerPositioner*/simplePlayerPositioner.transform.position;
             Player.instance./*playerPositioner*/simplePlayerPositioner./*MoveToPos*/MoveToPos(
             Player.instance./*playerPositioner*/transform.position,
@@ -35,9 +40,10 @@ public class PuzzleRock1 : Interactable
             /*0.7f*/ startDir.magnitude * Player.instance.simplePlayerPositioner.TimePerDistConstant,
             () =>
             {
+                Player.instance.ChangeState(PlayerStates.Interacting);
                 //CutsceneManager.instance.PlayClip(0, OnCompleteInteract);
                 //Debug.Log("At interact point");
-                //CutsceneManager.instance.PlayClip(2, () => { });
+                CutsceneManager.instance.PlayClip(2, () => { });
             });
         }
         //else if (!_solved)
@@ -101,6 +107,7 @@ public class PuzzleRock1 : Interactable
         }
     }
 
+    // Called from placeFruit Timeline
     public void PlaceFruit()
     {
         // get fruit
@@ -112,14 +119,14 @@ public class PuzzleRock1 : Interactable
         //fruit.position = _fruitPos;
 
         // animate
-        StartCoroutine(SprintTask.Run_c(0, 1, 3, (float t) =>
+        Vector3 iniFruitPos = fruit.position;
+        StartCoroutine(SprintTask.Run_c(0, 1, 1, (float t) =>
         {
-            fruit.position = Vector3.Lerp(fruit.position, _fruitPos, t);
-
+            fruit.position = Vector3.Lerp(iniFruitPos, _fruitPos, t);
         },
         () =>
         {
-
+            VfxManager.instance.PlayVfx(_fruitPlacedEffect, _fruitPos, Quaternion.identity, 3.1f);
         }));
     }
 }
